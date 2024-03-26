@@ -10,6 +10,19 @@ task("balance", "Prints an account's balance")
     console.log(ethers.formatEther(balance), "ETH");
   });
 
+task("timestamp", "Prints a block's timestamp")
+  .addOptionalParam("block", "The block number")
+  .setAction(async (taskArgs, { ethers }) => {
+    const param = isNaN(taskArgs.block) ? "latest" : Number(taskArgs.block);
+    const block = await ethers.provider.getBlock(param);
+
+    console.log(
+      block?.timestamp == null
+        ? "Unkown timestamp"
+        : `${block.timestamp}\n${new Date(block.timestamp * 1000)}`
+    );
+  });
+
 const config: HardhatUserConfig = {
   defaultNetwork: "localhost",
   networks: {

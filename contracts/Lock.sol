@@ -31,4 +31,10 @@ contract Lock {
 
         owner.transfer(address(this).balance);
     }
+
+    // uint256 public num;
+    // function setTime(uint256 x) public returns (uint256) {
+    //     num = x;
+    //     return num;
+    // }
 }
