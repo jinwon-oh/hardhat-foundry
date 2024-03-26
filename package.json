@@ -1,0 +1,29 @@
+{
+  "name": "hardhat-foundry",
+  "version": "1.0.0",
+  "description": "exercise",
+  "main": "index.js",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "build": "forge build",
+    "localhost": "npx hardhat node",
+    "test": "npx hardhat test",
+    "test-f": "forge test",
+    "test-h": "npm run test"
+  },
+  "author": "",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/jinwon-oh/hardhat-foundry.git"
+  },
+  "bugs": {
+    "url": "https://github.com/jinwon-oh/hardhat-foundry/issues"
+  },
+  "homepage": "https://github.com/jinwon-oh/hardhat-foundry#readme",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-foundry": "^1.1.1",
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.2"
+  }
+}
