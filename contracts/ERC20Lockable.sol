@@ -66,6 +66,7 @@ contract ERC20Lockable is IERC20Lockable, Initializable, ERC20Upgradeable {
         uint256 lockedUntil
     ) public override {
         if (lockedUntil > block.timestamp + maxLockTime) revert LockTooLong();
+        if (lockedUntil < block.timestamp) revert LockExpired();
         _spendAllowance(account, _msgSender(), amount);
         _lock(account, amount, _msgSender(), lockedUntil);
     }
