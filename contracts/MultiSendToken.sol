@@ -105,7 +105,7 @@ contract MultiSendToken {
         address tokenAddr,
         address payable[] memory addrs,
         uint256[] memory amnts
-    ) public payable {
+    ) external {
         // the addresses and amounts should be same in length
         require(addrs.length == amnts.length, "two array should be the same");
 
@@ -115,10 +115,12 @@ contract MultiSendToken {
         IERC20 token = IERC20(tokenAddr);
 
         require(
-            totalAmnt <= token.balanceOf(msg.sender),
+            totalAmnt < token.balanceOf(msg.sender),
             "The valid token is not sufficient"
         );
 
+        // bool r = token.approve(address(this), totalAmnt);
+        // require(r, "not approved");
         token.safeTransferFrom(msg.sender, address(this), totalAmnt);
         for (uint256 i = 0; i < addrs.length; i++) {
             // send the specified amount to the recipient

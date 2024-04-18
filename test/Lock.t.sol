@@ -5,6 +5,7 @@ import "forge-std/Test.sol";
 import "../contracts/Lock.sol";
 
 contract LockTest is Test {
+    uint256 constant ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
     uint256 constant ONE_GWEI = 1_000_000_000;
 
     Lock public lock;

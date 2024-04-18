@@ -1,14 +1,5 @@
 // SPDX-License-Identifier: MIT
-// Compatible with OpenZeppelin Contracts ^5.0.0
 pragma solidity ^0.8.24;
-
-// import "@openzeppelin/contracts-upgradeable-4/token/ERC20/ERC20Upgradeable.sol";
-// import "@openzeppelin/contracts-upgradeable-4/token/ERC20/extensions/ERC20BurnableUpgradeable.sol";
-// import "@openzeppelin/contracts-upgradeable-4/token/ERC20/extensions/ERC20PausableUpgradeable.sol";
-// import "@openzeppelin/contracts-upgradeable-4/access/OwnableUpgradeable.sol";
-// import "@openzeppelin/contracts-upgradeable-4/proxy/utils/Initializable.sol";
-
-// import "./ERC20LockableV4.sol";
 
 // @author Franncesco Sullo <francesco@sullo.co>
 import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
@@ -21,7 +12,7 @@ import "./ERC20Lockable.sol";
 
 // import {console} from "hardhat/console.sol";
 
-contract LockableTemplateV1 is
+contract LockableTemplateV2 is
     Initializable,
     ERC20Upgradeable,
     ERC20Lockable,
@@ -60,6 +51,12 @@ contract LockableTemplateV1 is
 
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);
+    }
+
+    function display() public view returns (address, uint256) {
+        address addr = _msgSender();
+        uint256 bal = availableBalanceOf(addr);
+        return (addr, bal);
     }
 
     // The following functions are overrides required by Solidity.

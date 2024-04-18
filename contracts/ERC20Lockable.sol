@@ -10,12 +10,16 @@ import "./IERC20Lockable.sol";
 
 // import {console} from "hardhat/console.sol";
 
-contract ERC20Lockable is IERC20Lockable, Initializable, ERC20Upgradeable {
+abstract contract ERC20Lockable is
+    IERC20Lockable,
+    Initializable,
+    ERC20Upgradeable
+{
     error NotEnoughLockedAmount();
     error LockExpired();
     error LockNotFound();
     error TooManyLocks();
-    error InsufficientAllowance();
+    // error InsufficientAllowance();
     error LockTooLong();
     error MaxLockTimeCannotBeZero();
 
@@ -29,7 +33,9 @@ contract ERC20Lockable is IERC20Lockable, Initializable, ERC20Upgradeable {
         uint32 locks;
     }
 
+    // [locker][account]: locker is requester for locking, account is owner of locked token. data is end date and amount of locked token.
     mapping(address => mapping(address => LockedAmount[])) internal _locks;
+    // [account]: account is owner of locked token. data is locker and count of locks.
     mapping(address => Locker[]) internal _lockers;
     uint256 public maxLockTime;
 
@@ -38,20 +44,32 @@ contract ERC20Lockable is IERC20Lockable, Initializable, ERC20Upgradeable {
         address to,
         uint256 value
     ) internal virtual override {
-        if (from == address(0)) return;
-        if (_lockers[_msgSender()].length == 0) return;
-        if (value > _availableBalanceOfWhileCleaning(from))
-            revert InsufficientAllowance();
+        // TODO: _beforeTransfer is not same as _update.
+        // // case1: minting
+        // if (from == address(0)) return;
+        // // case2: owner of token does not have lock
+        // if (_lockers[_msgSender()].length == 0) return;
+        // // case3: owner of token has enough balance can be or already unlocked.
+        // if (value > _availableBalanceOfWhileCleaning(from))
+        //     revert InsufficientAllowance();
+        // super._update(from, to, value);
+
+        require(
+            from == address(0) ||
+                _lockers[_msgSender()].length == 0 ||
+                value <= _availableBalanceOfWhileCleaning(from),
+            "InsufficientAllowance"
+        );
         super._update(from, to, value);
     }
 
     // solhint-disable-next-line
     function __ERC20Lockable_init(
-        string memory name,
-        string memory symbol,
+        // string memory name,
+        // string memory symbol,
         uint256 maxLockTime_
     ) public initializer {
-        __ERC20_init(name, symbol);
+        // __ERC20_init(name, symbol);
         _setMaxLockTime(maxLockTime_);
     }
 

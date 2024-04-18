@@ -10,7 +10,11 @@ import "./IERC20Lockable.sol";
 
 // import {console} from "hardhat/console.sol";
 
-contract ERC20LockableV4 is IERC20Lockable, Initializable, ERC20Upgradeable {
+abstract contract ERC20LockableV4 is
+    IERC20Lockable,
+    Initializable,
+    ERC20Upgradeable
+{
     error NotEnoughLockedAmount();
     error LockExpired();
     error LockNotFound();
@@ -47,11 +51,11 @@ contract ERC20LockableV4 is IERC20Lockable, Initializable, ERC20Upgradeable {
 
     // solhint-disable-next-line
     function __ERC20Lockable_init(
-        string memory name,
-        string memory symbol,
+        // string memory name,
+        // string memory symbol,
         uint256 maxLockTime_
     ) public initializer {
-        __ERC20_init(name, symbol);
+        // __ERC20_init(name, symbol);
         _setMaxLockTime(maxLockTime_);
     }
 
@@ -66,6 +70,7 @@ contract ERC20LockableV4 is IERC20Lockable, Initializable, ERC20Upgradeable {
         uint256 lockedUntil
     ) public override {
         if (lockedUntil > block.timestamp + maxLockTime) revert LockTooLong();
+        if (lockedUntil < block.timestamp) revert LockExpired();
         _spendAllowance(account, _msgSender(), amount);
         _lock(account, amount, _msgSender(), lockedUntil);
     }
