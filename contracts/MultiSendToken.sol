@@ -4,9 +4,17 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/math/Math.sol";
+// import "@openzeppelin/contracts/utils/Strings.sol";
 
 contract MultiSendToken {
     using SafeERC20 for IERC20;
+
+    error TransferFailed();
+    error NotOwner();
+    error SameOwner();
+    error InsufficientData();
+    error InsufficientValue();
+    error NotAllowded();
 
     // to save the owner of the contract in construction
     address public owner;
@@ -24,13 +32,17 @@ contract MultiSendToken {
 
     // modifier to check if the caller is owner
     modifier onlyOwner() {
-        // If the first argument of 'require' evaluates to 'false', execution terminates and all
-        // changes to the state and to Ether balances are reverted.
-        // This used to consume all gas in old EVM versions, but not anymore.
-        // It is often a good idea to use 'require' to check if functions are called correctly.
-        // As a second argument, you can also provide an explanation about what went wrong.
-        require(msg.sender == owner, "Not owner");
-        _;
+        // // If the first argument of 'require' evaluates to 'false', execution terminates and all
+        // // changes to the state and to Ether balances are reverted.
+        // // This used to consume all gas in old EVM versions, but not anymore.
+        // // It is often a good idea to use 'require' to check if functions are called correctly.
+        // // As a second argument, you can also provide an explanation about what went wrong.
+        // require(msg.sender == owner, "Not owner");
+        if (msg.sender == owner) {
+            _;
+        } else {
+            revert NotOwner();
+        }
     }
 
     /**
@@ -45,9 +57,13 @@ contract MultiSendToken {
     // the owner of the smart-contract can chage its owner to whoever
     // he/she wants
     function changeOwner(address newOwner) public onlyOwner {
-        require(newOwner != owner, "same owner");
-        emit OwnershipTransferred(owner, newOwner);
-        owner = newOwner;
+        // require(newOwner != owner, "same owner");
+        if (newOwner != owner) {
+            emit OwnershipTransferred(owner, newOwner);
+            owner = newOwner;
+        } else {
+            revert SameOwner();
+        }
     }
 
     // /**
@@ -69,12 +85,20 @@ contract MultiSendToken {
         uint256[] memory amounts
     ) private pure returns (uint256 retVal) {
         // the value of message should be exact of total amounts
-        uint256 totalAmnt = 0;
+        uint256 totalAmnt;
 
-        for (uint256 i = 0; i < amounts.length; i++) {
-            (bool isOk, uint256 res) = Math.tryAdd(totalAmnt, amounts[i]);
-            require(isOk, "total amount is not valid");
-            totalAmnt = res;
+        for (uint256 i; i < amounts.length; ) {
+            (bool success, uint256 res) = Math.tryAdd(totalAmnt, amounts[i]);
+            // require(success, "total amount is not valid");
+            if (success) {
+                totalAmnt = res;
+                // totalAmnt += amounts[i];
+                unchecked {
+                    ++i;
+                }
+            } else {
+                revert InsufficientData();
+            }
         }
 
         return totalAmnt;
@@ -82,21 +106,13 @@ contract MultiSendToken {
 
     function withdraw() public payable onlyOwner {
         emit Withdraw(address(this).balance);
-        (bool os, ) = payable(msg.sender).call{value: address(this).balance}(
-            ""
-        );
-        require(os);
+        (bool success, ) = payable(msg.sender).call{
+            value: address(this).balance
+        }("");
+        if (!success) {
+            revert TransferFailed();
+        }
         // total_value = 0;
-    }
-
-    // withdraw perform the transfering of ethers
-    function _withdraw(
-        address payable receiverAddr,
-        uint256 receiverAmnt
-    ) private {
-        emit Withdraw(receiverAmnt, receiverAddr);
-        (bool os, ) = receiverAddr.call{value: receiverAmnt}("");
-        require(os);
     }
 
     // withdrawals enable to multiple withdraws to different accounts
@@ -107,24 +123,43 @@ contract MultiSendToken {
         uint256[] memory amnts
     ) external {
         // the addresses and amounts should be same in length
-        require(addrs.length == amnts.length, "two array should be the same");
+        // require(addrs.length == amnts.length, "two array should be the same");
+        if (addrs.length != amnts.length) {
+            revert InsufficientData();
+        }
 
         // the value of the message in addition to sotred value should be more than total amounts
         uint256 totalAmnt = sum(amnts);
 
         IERC20 token = IERC20(tokenAddr);
 
-        require(
-            totalAmnt < token.balanceOf(msg.sender),
-            "The valid token is not sufficient"
-        );
+        // require(
+        //     totalAmnt < token.balanceOf(msg.sender),
+        //     "The valid token is not sufficient"
+        // );
+        if (totalAmnt > token.balanceOf(msg.sender)) {
+            revert InsufficientValue();
+        }
 
-        // bool r = token.approve(address(this), totalAmnt);
-        // require(r, "not approved");
-        token.safeTransferFrom(msg.sender, address(this), totalAmnt);
-        for (uint256 i = 0; i < addrs.length; i++) {
+        // require(
+        //     totalAmnt == token.allowance(msg.sender, address(this)),
+        //     "not allowded"
+        // );
+        if (totalAmnt != token.allowance(msg.sender, address(this))) {
+            revert NotAllowded();
+        }
+
+        // token.safeTransferFrom(msg.sender, address(this), totalAmnt);
+        // for (uint256 i = 0; i < addrs.length; i++) {
+        //     // send the specified amount to the recipient
+        //     token.safeTransfer(addrs[i], amnts[i]);
+        // }
+        for (uint256 i; i < addrs.length; ) {
             // send the specified amount to the recipient
-            token.safeTransfer(addrs[i], amnts[i]);
+            token.safeTransferFrom(msg.sender, addrs[i], amnts[i]);
+            unchecked {
+                ++i;
+            }
         }
     }
 }

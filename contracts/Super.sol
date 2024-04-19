@@ -55,4 +55,8 @@ contract L4 is L1, L3, L2 {
         _su(a, b);
         emit L4Contract("After super");
     }
+
+    function max() public pure returns (uint256) {
+        return type(uint256).max;
+    }
 }

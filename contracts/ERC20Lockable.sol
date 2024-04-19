@@ -19,7 +19,7 @@ abstract contract ERC20Lockable is
     error LockExpired();
     error LockNotFound();
     error TooManyLocks();
-    // error InsufficientAllowance();
+    error InsufficientAllowance();
     error LockTooLong();
     error MaxLockTimeCannotBeZero();
 
@@ -54,13 +54,15 @@ abstract contract ERC20Lockable is
         //     revert InsufficientAllowance();
         // super._update(from, to, value);
 
-        require(
+        if (
             from == address(0) ||
-                _lockers[_msgSender()].length == 0 ||
-                value <= _availableBalanceOfWhileCleaning(from),
-            "InsufficientAllowance"
-        );
-        super._update(from, to, value);
+            _lockers[_msgSender()].length == 0 ||
+            value <= _availableBalanceOfWhileCleaning(from)
+        ) {
+            super._update(from, to, value);
+        } else {
+            revert InsufficientAllowance();
+        }
     }
 
     // solhint-disable-next-line

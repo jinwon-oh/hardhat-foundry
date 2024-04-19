@@ -19,6 +19,7 @@ async function main() {
 async function testV1(signers, addr) {
   const f = await ethers.getContractFactory("L4");
   const c = await f.attach(addr);
+  console.log(await c.max());
   let a1 = 0x10000;
   let a2 = 0x10000;
   let b = await c.suTest(a1, a2);
